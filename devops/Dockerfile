@@ -30,8 +30,9 @@ WORKDIR /app
 # Copy installed packages from builder
 COPY --from=builder /install /usr/local
 
-# Copy application with correct ownership
+# Copy application and frontend with correct ownership
 COPY --chown=appuser:appgroup app/main.py .
+COPY --chown=appuser:appgroup frontend /frontend
 
 USER appuser
 
