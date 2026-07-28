@@ -108,14 +108,13 @@ jobs:
               sudo usermod -aG docker "$USER" || true
             fi
 
-            if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-              echo "Installing Docker Compose system-wide..."
+            if [ ! -f /usr/bin/docker-compose ]; then
+              echo "Installing Docker Compose to /usr/bin/docker-compose..."
               sudo curl -SL "https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64" \
-                -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-              sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose 2>/dev/null || true
+                -o /usr/bin/docker-compose
+              sudo chmod +x /usr/bin/docker-compose
               sudo mkdir -p /usr/libexec/docker/cli-plugins
-              sudo cp /usr/local/bin/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
+              sudo cp /usr/bin/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
             fi
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -139,13 +138,8 @@ jobs:
             echo "  🔨 Step 3: Rebuild & restart Docker containers"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd devops
-            if command -v docker-compose &> /dev/null; then
-              sudo docker-compose build --no-cache
-              sudo docker-compose up -d --remove-orphans
-            else
-              sudo docker compose build --no-cache
-              sudo docker compose up -d --remove-orphans
-            fi
+            sudo /usr/bin/docker-compose build --no-cache
+            sudo /usr/bin/docker-compose up -d --remove-orphans
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  🧹 Step 4: Clean up unused Docker resources"
@@ -156,11 +150,7 @@ jobs:
             echo "  🩺 Step 5: Health check"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             sleep 5
-            if command -v docker-compose &> /dev/null; then
-              sudo docker-compose ps
-            else
-              sudo docker compose ps
-            fi
+            sudo /usr/bin/docker-compose ps
             curl --fail --silent --max-time 10 http://localhost || echo "⚠️ HTTP check failed — check nginx logs"
 
             echo ""
