@@ -108,22 +108,14 @@ jobs:
               sudo usermod -aG docker "$USER" || true
             fi
 
-            if ! docker compose version &> /dev/null; then
+            if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
               echo "Installing Docker Compose system-wide..."
+              sudo curl -SL "https://github.com/docker/compose/releases/download/v2.29.1/docker-compose-linux-x86_64" \
+                -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose 2>/dev/null || true
               sudo mkdir -p /usr/libexec/docker/cli-plugins
-              sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
-                -o /usr/libexec/docker/cli-plugins/docker-compose || true
-              sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose || true
-              sudo mkdir -p /usr/local/bin
-              sudo ln -sf /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose 2>/dev/null || true
-            fi
-
-            if ! docker buildx version &> /dev/null; then
-              echo "Installing Docker Buildx system-wide..."
-              sudo mkdir -p /usr/libexec/docker/cli-plugins
-              sudo curl -SL https://github.com/docker/buildx/releases/download/v0.17.1/buildx-v0.17.1.linux-amd64 \
-                -o /usr/libexec/docker/cli-plugins/docker-buildx || true
-              sudo chmod +x /usr/libexec/docker/cli-plugins/docker-buildx || true
+              sudo cp /usr/local/bin/docker-compose /usr/libexec/docker/cli-plugins/docker-compose
             fi
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -147,8 +139,13 @@ jobs:
             echo "  🔨 Step 3: Rebuild & restart Docker containers"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd devops
-            sudo DOCKER_BUILDKIT=0 docker compose build --no-cache || sudo docker compose build --no-cache
-            sudo docker compose up -d --remove-orphans
+            if command -v docker-compose &> /dev/null; then
+              sudo docker-compose build --no-cache
+              sudo docker-compose up -d --remove-orphans
+            else
+              sudo docker compose build --no-cache
+              sudo docker compose up -d --remove-orphans
+            fi
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  🧹 Step 4: Clean up unused Docker resources"
@@ -159,7 +156,11 @@ jobs:
             echo "  🩺 Step 5: Health check"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             sleep 5
-            sudo docker compose ps
+            if command -v docker-compose &> /dev/null; then
+              sudo docker-compose ps
+            else
+              sudo docker compose ps
+            fi
             curl --fail --silent --max-time 10 http://localhost || echo "⚠️ HTTP check failed — check nginx logs"
 
             echo ""
