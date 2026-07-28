@@ -109,21 +109,21 @@ jobs:
             fi
 
             if ! docker compose version &> /dev/null; then
-              echo "Docker Compose plugin not found. Installing..."
-              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-              mkdir -p $DOCKER_CONFIG/cli-plugins
-              curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
-                -o $DOCKER_CONFIG/cli-plugins/docker-compose || true
-              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose || true
+              echo "Installing Docker Compose system-wide..."
+              sudo mkdir -p /usr/libexec/docker/cli-plugins
+              sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+                -o /usr/libexec/docker/cli-plugins/docker-compose || true
+              sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose || true
+              sudo mkdir -p /usr/local/bin
+              sudo ln -sf /usr/libexec/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose 2>/dev/null || true
             fi
 
             if ! docker buildx version &> /dev/null; then
-              echo "Installing Docker Buildx plugin..."
-              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-              mkdir -p $DOCKER_CONFIG/cli-plugins
-              curl -SL https://github.com/docker/buildx/releases/download/v0.17.1/buildx-v0.17.1.linux-amd64 \
-                -o $DOCKER_CONFIG/cli-plugins/docker-buildx || true
-              chmod +x $DOCKER_CONFIG/cli-plugins/docker-buildx || true
+              echo "Installing Docker Buildx system-wide..."
+              sudo mkdir -p /usr/libexec/docker/cli-plugins
+              sudo curl -SL https://github.com/docker/buildx/releases/download/v0.17.1/buildx-v0.17.1.linux-amd64 \
+                -o /usr/libexec/docker/cli-plugins/docker-buildx || true
+              sudo chmod +x /usr/libexec/docker/cli-plugins/docker-buildx || true
             fi
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -147,19 +147,19 @@ jobs:
             echo "  🔨 Step 3: Rebuild & restart Docker containers"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd devops
-            DOCKER_BUILDKIT=0 docker compose build --no-cache || docker compose build --no-cache
-            docker compose up -d --remove-orphans
+            sudo DOCKER_BUILDKIT=0 docker compose build --no-cache || sudo docker compose build --no-cache
+            sudo docker compose up -d --remove-orphans
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  🧹 Step 4: Clean up unused Docker resources"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            docker system prune -f --volumes=false
+            sudo docker system prune -f --volumes=false
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  🩺 Step 5: Health check"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             sleep 5
-            docker compose ps
+            sudo docker compose ps
             curl --fail --silent --max-time 10 http://localhost || echo "⚠️ HTTP check failed — check nginx logs"
 
             echo ""
