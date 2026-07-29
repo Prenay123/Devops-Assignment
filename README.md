@@ -15,7 +15,7 @@ cd terraform/
 terraform output ec2_public_ip
 ```
 
---
+---
 
 ## 📋 Table of Contents
 
