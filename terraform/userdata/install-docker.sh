@@ -3,44 +3,57 @@
 # Userdata script: Setup Docker, Git, & Bootstrap App
 # -----------------------------------------------
 
-set -e
+#!/bin/bash
+set -eux
 
-# Update system packages
-yum update -y
+# Update system
+dnf update -y
 
 # Install Git
-yum install -y git
+dnf install -y git
 
 # Install Docker
-amazon-linux-extras install docker -y
+dnf install -y docker
 
-# Start and enable Docker service
-systemctl start docker
+# Enable Docker
 systemctl enable docker
+systemctl start docker
 
-# Add ec2-user to docker group so it can run docker without sudo
+# Add ec2-user to docker group
 usermod -aG docker ec2-user
 
-# Install Docker Compose
-curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
-  -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
+# Install Docker Buildx
+mkdir -p /usr/libexec/docker/cli-plugins
 
-# Create symlink to match CI/CD expectations
-ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+curl -SL https://github.com/docker/buildx/releases/download/v0.21.1/buildx-v0.21.1.linux-amd64 \
+-o /usr/libexec/docker/cli-plugins/docker-buildx
 
-# Define variables
+chmod +x /usr/libexec/docker/cli-plugins/docker-buildx
+
+# Install Docker Compose Plugin
+mkdir -p /usr/libexec/docker/cli-plugins
+
+curl -SL https://github.com/docker/compose/releases/download/v2.39.1/docker-compose-linux-x86_64 \
+-o /usr/libexec/docker/cli-plugins/docker-compose
+
+chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+# Verify installation
+docker --version
+docker compose version
+docker buildx version
+
+# Clone application
 REPO_URL="https://github.com/Prenay123/Devops-Assignment.git"
 APP_DIR="/home/ec2-user/app"
 
-# Bootstrap application
-echo "Bootstrapping app from repository..."
 git clone "$REPO_URL" "$APP_DIR"
+
 chown -R ec2-user:ec2-user "$APP_DIR"
 
-# Run initial docker-compose up as ec2-user
-cd "$APP_DIR"
-sudo -u ec2-user docker-compose up -d --build
+cd "$APP_DIR/devops"
+
+docker compose up -d --build
 
 echo "Docker installation and application bootstrapping complete."
 

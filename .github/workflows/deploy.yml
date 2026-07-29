@@ -138,8 +138,8 @@ jobs:
             echo "  🔨 Step 3: Rebuild & restart Docker containers"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             cd devops
-            sudo /usr/bin/docker-compose build --no-cache
-            sudo /usr/bin/docker-compose up -d --remove-orphans
+            docker compose build --no-cache
+            docker compose up -d --remove-orphans
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  🧹 Step 4: Clean up unused Docker resources"
@@ -150,7 +150,7 @@ jobs:
             echo "  🩺 Step 5: Health check"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             sleep 5
-            sudo /usr/bin/docker-compose ps
+            docker compose ps
             curl --fail --silent --max-time 10 http://localhost || echo "⚠️ HTTP check failed — check nginx logs"
 
             echo ""
