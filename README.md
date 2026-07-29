@@ -7,7 +7,7 @@
 
 > **The application is live and accessible at:**
 >
-> ### 👉 `http://54.196.68.142`
+> ### 👉 `http://18.232.167.32`
 
 To find your EC2 public IP after deploying with Terraform:
 ```bash
