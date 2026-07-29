@@ -463,24 +463,14 @@ location /ws {
 - Your `.pem` key file for SSH access
 - A GitHub repository with this code
 
----
+### Step 1 — Automated EC2 Server Setup (Terraform User Data)
 
-### Step 1 — One-time EC2 Server Setup
+When you run `terraform apply`, the EC2 instance automatically bootstraps itself. The User Data script (`terraform/userdata/install-docker.sh`) automatically:
+1. Installs Git, Docker, and Docker Compose.
+2. Clones this repository to `/home/ec2-user/app`.
+3. Sets up folder ownership and starts the chat application containers in the background.
 
-Copy and run the bootstrap script on your server:
-
-```bash
-# From your local machine — copy the script to EC2
-scp -i your-key.pem server-setup.sh ec2-user@<EC2_PUBLIC_IP>:~/
-
-# SSH into EC2
-ssh -i your-key.pem ec2-user@<EC2_PUBLIC_IP>
-
-# Run the bootstrap script (replace with your actual GitHub repo URL)
-bash ~/server-setup.sh https://github.com/YOUR_USERNAME/YOUR_REPO.git
-```
-
-This automatically installs Git, Docker, Docker Compose V2, clones your repo to `~/app`, and runs the first deployment.
+No manual script copying or execution is needed on the server!
 
 ---
 
@@ -586,7 +576,6 @@ devops/
 ├── Dockerfile                  # Multi-stage Python backend image
 ├── docker-compose.yml          # Composes nginx + backend services
 ├── nginx.conf                  # Nginx routing + WebSocket proxy config
-├── server-setup.sh             # One-time EC2 bootstrap script
 ├── .gitignore
 └── README.md
 ```
